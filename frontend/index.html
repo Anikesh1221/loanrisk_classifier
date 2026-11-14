@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoanSight | Loan risk assessment</title>
+<meta name="description" content="Estimate borrower loan default risk with a trained Random Forest model.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#assess">Skip to assessment</a>
+
+<header class="nav" id="top">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="LoanSight home">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="5" fill="#14243A"/><path d="M7 18V13M13 18V8M19 18v-6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="19" cy="7.5" r="1.9" fill="#21856B"/></svg>
+      LoanSight
+    </a>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="menu" aria-label="Open menu"><span></span><span></span></button>
+    <nav class="menu" id="menu" aria-label="Main">
+      <a href="#top">Home</a>
+      <a href="#assess">Risk Assessment</a>
+      <a href="#how">How It Works</a>
+      <a href="#about">About</a>
+      <a class="btn btn-sm" href="#assess">Assess Borrower</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <h1>Smarter Lending Decisions Start With Better Risk Assessment.</h1>
+      <p class="lead">Evaluate borrower information through machine learning and gain insights into potential loan default risk.</p>
+      <div class="actions">
+        <a class="btn" href="#assess">Start Risk Assessment</a>
+        <a class="btn btn-ghost" href="#how">Explore How It Works</a>
+      </div>
+      <ul class="trust">
+        <li>Random Forest classifier</li>
+        <li>Eleven borrower and loan inputs</li>
+        <li>Decision threshold of 0.40</li>
+      </ul>
+    </div>
+
+    <aside class="file" aria-label="Illustration of a borrower file waiting for assessment">
+      <div class="file-head"><strong>Borrower file</strong><span>Awaiting assessment</span></div>
+      <dl class="file-rows">
+        <div><dt>Income and employment</dt><dd><i style="width:72%"></i></dd></div>
+        <div><dt>Loan amount against income</dt><dd><i style="width:48%"></i></dd></div>
+        <div><dt>Loan grade and interest rate</dt><dd><i style="width:60%"></i></dd></div>
+        <div><dt>Credit history</dt><dd><i style="width:36%"></i></dd></div>
+      </dl>
+      <div class="scale" aria-hidden="true">
+        <div class="scale-bar"><span class="tick" style="left:40%"></span></div>
+        <div class="scale-labels"><span>Lower</span><span class="at40">0.40 threshold</span><span>Higher</span></div>
+      </div>
+      <p class="file-note">The estimated score appears here once the model has replied.</p>
+    </aside>
+  </div>
+</section>
+
+<section class="section" id="assess">
+  <div class="wrap">
+    <div class="head">
+      <h2>Risk assessment</h2>
+      <p>Enter the borrower and loan details. Everything is sent to your FastAPI model, which returns the result.</p>
+    </div>
+
+    <form id="riskForm" class="form" novalidate>
+      <fieldset class="group">
+        <legend><b>Personal information</b><span>Basic borrower details.</span></legend>
+        <div class="fields">
+          <div class="field">
+            <label for="person_age">Age</label>
+            <input type="number" id="person_age" name="person_age" inputmode="numeric" step="1" min="18" max="100" placeholder="e.g. 28" required>
+            <small class="hint">Whole years, 18 or above.</small><small class="err" id="err_person_age"></small>
+          </div>
+          <div class="field">
+            <label for="person_home_ownership">Home ownership</label>
+            <select id="person_home_ownership" name="person_home_ownership" required>
+              <option value="">Select status</option><option>RENT</option><option>MORTGAGE</option><option>OWN</option><option>OTHER</option>
+            </select>
+            <small class="err" id="err_person_home_ownership"></small>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend><b>Employment information</b><span>Income and work history.</span></legend>
+        <div class="fields">
+          <div class="field">
+            <label for="person_income">Annual income</label>
+            <input type="number" id="person_income" name="person_income" inputmode="decimal" step="any" min="0" placeholder="e.g. 50000" required>
+            <small class="hint">Yearly income before tax.</small><small class="err" id="err_person_income"></small>
+          </div>
+          <div class="field">
+            <label for="person_emp_length">Employment length (years)</label>
+            <input type="number" id="person_emp_length" name="person_emp_length" inputmode="decimal" step="any" min="0" max="70" placeholder="e.g. 2.5" required>
+            <small class="hint">Decimals are fine, like 2.5.</small><small class="err" id="err_person_emp_length"></small>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend><b>Loan details</b><span>What is being borrowed and on what terms.</span></legend>
+        <div class="fields">
+          <div class="field">
+            <label for="loan_intent">Loan intent</label>
+            <select id="loan_intent" name="loan_intent" required>
+              <option value="">Select purpose</option><option>EDUCATION</option><option>MEDICAL</option><option>VENTURE</option><option>PERSONAL</option><option>DEBTCONSOLIDATION</option><option>HOMEIMPROVEMENT</option>
+            </select>
+            <small class="err" id="err_loan_intent"></small>
+          </div>
+          <div class="field">
+            <label for="loan_grade">Loan grade</label>
+            <select id="loan_grade" name="loan_grade" required>
+              <option value="">Select grade</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option>
+            </select>
+            <small class="err" id="err_loan_grade"></small>
+          </div>
+          <div class="field">
+            <label for="loan_amnt">Loan amount</label>
+            <input type="number" id="loan_amnt" name="loan_amnt" inputmode="decimal" step="any" min="0" placeholder="e.g. 10000" required>
+            <small class="err" id="err_loan_amnt"></small>
+          </div>
+          <div class="field">
+            <label for="loan_int_rate">Interest rate (%)</label>
+            <input type="number" id="loan_int_rate" name="loan_int_rate" inputmode="decimal" step="any" min="0" max="100" placeholder="e.g. 11.5" required>
+            <small class="hint">Enter 11.5 for 11.5%.</small><small class="err" id="err_loan_int_rate"></small>
+          </div>
+          <div class="field wide">
+            <label for="loan_percent_income">Loan percent of income</label>
+            <div class="inline">
+              <input type="number" id="loan_percent_income" name="loan_percent_income" inputmode="decimal" step="any" min="0" max="1" placeholder="e.g. 0.20" required>
+              <button type="button" class="link" id="calcPercent">Work it out from amount and income</button>
+            </div>
+            <small class="hint">A decimal between 0 and 1. A loan of 10,000 on an income of 50,000 is 0.20.</small><small class="err" id="err_loan_percent_income"></small>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend><b>Credit history</b><span>Past defaults and file length.</span></legend>
+        <div class="fields">
+          <div class="field">
+            <label for="cb_person_default_on_file">Previous default on file</label>
+            <select id="cb_person_default_on_file" name="cb_person_default_on_file" required>
+              <option value="">Select</option><option value="Y">Y (yes)</option><option value="N">N (no)</option>
+            </select>
+            <small class="err" id="err_cb_person_default_on_file"></small>
+          </div>
+          <div class="field">
+            <label for="cb_person_cred_hist_length">Credit history length (years)</label>
+            <input type="number" id="cb_person_cred_hist_length" name="cb_person_cred_hist_length" inputmode="numeric" step="any" min="0" max="80" placeholder="e.g. 5" required>
+            <small class="err" id="err_cb_person_cred_hist_length"></small>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="submit-row">
+        <div id="formError" class="alert" role="alert" hidden></div>
+        <div class="buttons">
+          <button type="submit" class="btn" id="submitBtn"><span class="spin" aria-hidden="true"></span><span id="submitLabel">Assess risk</span></button>
+          <button type="reset" class="btn btn-ghost" id="resetBtn">Reset form</button>
+          <button type="button" class="link" id="sampleBtn">Fill example values</button>
+        </div>
+      </div>
+    </form>
+
+    <section class="result" id="result" aria-live="polite" hidden>
+      <div class="result-top">
+        <div>
+          <h3>Estimated model risk score</h3>
+          <p class="result-sub">Output of an uncalibrated Random Forest. It is a model score, not a statistically verified default probability.</p>
+        </div>
+        <span class="chip" id="resStatus"></span>
+      </div>
+
+      <div class="score">
+        <div class="score-num" id="resProb">0.00%</div>
+        <div class="meter" role="img" id="meter" aria-label="Risk score against threshold">
+          <div class="meter-fill" id="meterFill"></div>
+          <div class="meter-tick" id="meterTick"><span id="meterTickLabel"></span></div>
+        </div>
+        <div class="meter-ends"><span>0%</span><span>100%</span></div>
+      </div>
+
+      <div class="facts">
+        <div><span>Classification</span><b id="resClass"></b></div>
+        <div><span>Model prediction</span><b id="resPred"></b></div>
+        <div><span>Decision threshold</span><b id="resThr"></b></div>
+      </div>
+
+      <div class="summary">
+        <h4>Prediction summary</h4>
+        <p id="resText"></p>
+      </div>
+
+      <div class="summary">
+        <h4>Borrower summary</h4>
+        <dl class="borrower" id="borrowerList"></dl>
+      </div>
+
+      <p class="disclaimer">This assessment is a machine learning model estimate and should not be treated as a guaranteed probability of loan default or as the sole basis for lending decisions.</p>
+    </section>
+  </div>
+</section>
+
+<section class="section alt" id="how">
+  <div class="wrap">
+    <div class="head">
+      <h2>How it works</h2>
+      <p>LoanSight passes your inputs to a trained Random Forest classification model and reports what the model returns.</p>
+    </div>
+    <ol class="steps">
+      <li><h3>Borrower information</h3><p>You enter eleven details about the borrower, the loan and the credit file. Each one is checked in the browser before anything is sent.</p></li>
+      <li><h3>Machine learning analysis</h3><p>The details go to a FastAPI service. A Random Forest, an ensemble of many decision trees, scores the application.</p></li>
+      <li><h3>Risk assessment result</h3><p>The service returns a score and a classification. The score is compared with a 0.40 threshold to label the borrower as low risk or risky.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="wrap about">
+    <div class="head">
+      <h2>About LoanSight</h2>
+      <p>LoanSight is a machine learning-based loan risk assessment application designed to help understand borrower risk through structured financial information.</p>
+    </div>
+    <ul class="notes">
+      <li><b>A decision aid.</b> It supports human review and does not replace it.</li>
+      <li><b>An uncalibrated score.</b> Scores show relative risk and are not exact odds of default.</li>
+      <li><b>Dependent on training data.</b> Results reflect the data the model learned from.</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-in">
+    <div>
+      <a class="brand light" href="#top">LoanSight</a>
+      <p>A machine learning project for loan risk classification, built with a Random Forest model and a FastAPI backend.</p>
+    </div>
+    <nav aria-label="Footer"><a href="#top">Home</a><a href="#assess">Risk Assessment</a><a href="#how">How It Works</a><a href="#about">About</a></nav>
+    <p class="fine">LoanSight provides model estimates for learning and decision support only. It is not financial advice and should not be the sole basis for any lending decision.</p>
+    <p class="fine">&copy; <span id="year">2026</span> LoanSight. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
