@@ -1,8 +1,8 @@
 "use strict";
 
 /* ---------- Config ---------- */
-const API_URL = "http://127.0.0.1:8000/predict";
-const REQUEST_TIMEOUT_MS = 20000;
+const API_URL = "https://loanrisk-classifier.onrender.com/predict";
+const REQUEST_TIMEOUT_MS = 60000;
 
 /* Field names match the FastAPI request model exactly. */
 const FIELDS = [
